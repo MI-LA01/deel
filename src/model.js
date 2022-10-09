@@ -100,7 +100,6 @@ class Profile extends Sequelize.Model {
       //Let's just map and reduce based on existing request and compute the sum of unpaid job for this profile. 
       const sumOfUnpaidJobs = ((await this.getAllActiveAndUnPaidJobs()).map((i) => i.price)).reduce((sum, i) => sum + i);
       const recipient = await Profile.findByPk(id)
-      
       const recipientNewBalance = recipient.balance + amount;
       const senderNewBalance = this.balance - amount;
 
@@ -156,7 +155,6 @@ class Profile extends Sequelize.Model {
 
   const contractorToPay = await this.getContractorToPayByJobId(jobId);
     if (contractorToPay) {
-
       const price = contractorToPay.price;
       const ContractorId = contractorToPay.Contract.ContractorId;
       const ClientId = this.id;
@@ -166,7 +164,8 @@ class Profile extends Sequelize.Model {
 
       //Assuming the Client Balance can't reach 0.. 
       if (newClientBalance < 0) {
-        throw new Error("balance can't be negative");
+        txRet.tx.Msg = 'Balance can\'t be negative';
+        return tx;
       }
       //start unmanaged transaction. 
       const t = await sequelize.transaction();
@@ -186,8 +185,8 @@ class Profile extends Sequelize.Model {
         txRet = {
           paid: true,
           tx: {
-            ClientName : this.fullName,
-            ContractorId: contractorToPay.Contract.Contractor.fullName,
+            ClientFullName : this.fullName,
+            ContractorFullName: contractorToPay.Contract.Contractor.fullName,
             ClientPreviousBalance: ClientPreviousBalance,
             ClientNewBalance: newClientBalance,
             ContractorPreviousBalance: contractorToPay.Contract.Contractor.balance,
@@ -203,6 +202,8 @@ class Profile extends Sequelize.Model {
         await t.rollback();
         txRet.tx.Msg = error.toString()
       }
+    } else {
+      txRet.tx.Msg = "No job to pay"
     }
     return txRet;
   }

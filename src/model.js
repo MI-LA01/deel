@@ -91,59 +91,55 @@ class Profile extends Sequelize.Model {
     const retval = { status: false, msg: "" };
 
     //assumption, a client can't deposit to itself. 
-    if(id == this.id) {
+    if(id > 0 && id == this.id) {
       retval.msg = 'a client can\'t deposit to itself'
     } 
-    else 
+    //Assume only a client is supposed to do that with amount > 0
+    else if(this.isClient() && amount > 0)
     {
-      //Assume only a client is supposed to do that. 
-      if (this.isClient()) {
-        //Let's just map and reduce based on existing request and compute the sum of unpaid job for this profile. 
-        const sumOfUnpaidJobs = ((await this.getAllActiveAndUnPaidJobs()).map((i) => i.price)).reduce((sum, i) => sum + i);
-        const recipient = await Profile.findByPk(id)
-        
-        const recipientNewBalance = recipient.balance + amount;
-        const senderNewBalance = this.balance - amount;
-
-        if(senderNewBalance < 0) {
-          retval.msg = "the sender balance have less than the amount to pay"
-          return retval;
-        } 
-        //we avoid /0 and ensure we maintain the sender balance with at 25% of the total job to pay.
-        if(sumOfUnpaidJobs > 0 && (senderNewBalance / sumOfUnpaidJobs) < 0.25) {
-          retval.msg = "the sender balance should be maintained at 25% of the total unpaid jobs"
-          return retval;
-        } 
+      //Let's just map and reduce based on existing request and compute the sum of unpaid job for this profile. 
+      const sumOfUnpaidJobs = ((await this.getAllActiveAndUnPaidJobs()).map((i) => i.price)).reduce((sum, i) => sum + i);
+      const recipient = await Profile.findByPk(id)
       
-        const t = await sequelize.transaction();
-        try {
+      const recipientNewBalance = recipient.balance + amount;
+      const senderNewBalance = this.balance - amount;
 
-          //Sender
-          if (!await this.update({ balance: senderNewBalance }, { transaction: t }))
-            throw new Error("can't update the sender balance (this client) with the new deposit");
-          //Recipient
-          if (!await Profile.update({ balance: recipientNewBalance }, { where: {id: id}, transaction: t }))
-            throw new Error("can't update the recipient client balance with the new deposit");
+      if(senderNewBalance < 0) {
+        retval.msg = "the sender balance have less than the amount to pay"
+        return retval;
+      } 
+      //we avoid /0 and ensure we maintain the sender balance with at 25% of the total job to pay.
+      if(sumOfUnpaidJobs > 0 && (senderNewBalance / sumOfUnpaidJobs) < 0.25) {
+        retval.msg = "the sender balance should be maintained at 25% of the total unpaid jobs"
+        return retval;
+      } 
+      const t = await sequelize.transaction();
+      try {
 
-          await t.commit();
+        //Sender
+        if (!await this.update({ balance: senderNewBalance }, { transaction: t }))
+          throw new Error("can't update the sender balance (this client) with the new deposit");
+        //Recipient
+        if (!await Profile.update({ balance: recipientNewBalance }, { where: {id: id}, transaction: t }))
+          throw new Error("can't update the recipient client balance with the new deposit");
 
-          //Some debug
-          retval.status = true;
-          retval.msg = "sucessfully deposited to client";
-          retval.senderBalance = this.balance;
-          retval.recipientBalance = recipient.balance;
-          retval.recipientNewBalance = recipientNewBalance;
-          retval.sumOfSenderUnpaidJobs = sumOfUnpaidJobs;
-          retval.amountToPay = amount;
-          retval.ratio = (senderNewBalance / sumOfUnpaidJobs)*100
-          
-        } catch (error) {
-          retval.msg = error.msg;
-          // If the execution reaches this line, an error was thrown.
-          // We rollback the transaction.
-          await t.rollback();
-        }
+        await t.commit();
+
+        //Some debug
+        retval.status = true;
+        retval.msg = "sucessfully deposited to client";
+        retval.senderBalance = this.balance;
+        retval.recipientBalance = recipient.balance;
+        retval.recipientNewBalance = recipientNewBalance;
+        retval.sumOfSenderUnpaidJobs = sumOfUnpaidJobs;
+        retval.amountToPay = amount;
+        retval.ratio = (senderNewBalance / sumOfUnpaidJobs)*100
         
+      } catch (error) {
+        retval.msg = error.msg;
+        // If the execution reaches this line, an error was thrown.
+        // We rollback the transaction.
+        await t.rollback();
       }
     }
     return retval;

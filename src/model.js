@@ -153,7 +153,7 @@ class Profile extends Sequelize.Model {
       tx: {}
     };
 
-  const contractorToPay = await this.getContractorToPayByJobId(jobId);
+    const contractorToPay = await this.getContractorToPayByJobId(jobId);
     if (contractorToPay) {
       const price = contractorToPay.price;
       const ContractorId = contractorToPay.Contract.ContractorId;

@@ -2,14 +2,25 @@
 
 ## Alexis update 
 
-All features were implemented.
+🎉🎉 All routes are implemented.🎉🎉
 
-* Sequelize was brand new for me but found it nice. 
-* Please note, did not code in js since long time so certainly ecma syntax may looks oldstyle. 
-* Some workarounds were required but nothing too hackish. 
+Additional notes : 
+* Sequelize was brand new for me but I found it nice. 
+* Please note, did not code in JS since long time, so certainly my ECMA syntax may looks oldstyle. 
+* Some workarounds were required but nothing too hackish. (using a map at some points)
 * Postman was used locally to request, the corresponding configuration file can be found in this repo / root : `deel.postman_collection.json`
-* Added some tests with jest, again this was brand new to use it and I covered only very basic scenarios. (Contract(s)/Jobs) : `npm test` 
--- 
+* Added some tests with jest, again this was brand new to use it and I covered only very basic scenarios. (Contract(s)/Jobs) 
+```
+npm test
+```
+* I added a Dockerfile added : 
+```
+docker build . -t agruet/deel
+docker run -d agruet/deel
+```
+
+
+## ----- deel ----- 
 
 💫 Welcome! 🎉
 

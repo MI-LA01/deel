@@ -155,7 +155,6 @@ class Profile extends Sequelize.Model {
 
     const contractorToPay = await this.getContractorToPayByJobId(jobId);
     if (contractorToPay) {
-
       const price = contractorToPay.price;
       const ContractorId = contractorToPay.Contract.ContractorId;
       const ClientId = this.id;
@@ -203,6 +202,8 @@ class Profile extends Sequelize.Model {
         await t.rollback();
         txRet.tx.Msg = error.toString()
       }
+    } else {
+      txRet.tx.Msg = "No job to pay"
     }
     return txRet;
   }

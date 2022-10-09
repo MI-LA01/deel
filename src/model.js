@@ -10,8 +10,8 @@ class Profile extends Sequelize.Model {
 
   async getContractById(id) {
     let contract = {};
-    //security, double we reallly get contract from either client or contractor. 
-    if (this.type == 'client' || this.type == 'contractor') {
+    //security, double check we really get contract from either client or contractor. 
+    if (this.isClient() || this.isContractor()) {
       contract = Contract.findOne({
         where: {
           id: id
@@ -30,7 +30,7 @@ class Profile extends Sequelize.Model {
 
   async getContracts() {
     let contracts = {};
-    //security, to ensure we are not fetching something else. 
+    //security, double check we really get contract from either client or contractor. 
     if (this.isClient() || this.isContractor()) {
       let options = {
         where:
@@ -55,7 +55,7 @@ class Profile extends Sequelize.Model {
 
   async getAllActiveAndUnPaidJobs() {
     let jobs = {};
-    //security, to ensure we are not fetching something else. 
+    //security, double check we really get contract from either client or contractor. 
     if (this.isClient() || this.isContractor()) {
       //This may be slow.. too much nested innerjoin.. 
       jobs = Job.findAll({
@@ -87,37 +87,62 @@ class Profile extends Sequelize.Model {
     return jobs;
   }
 
-  async deposit(amount) {
+  async depositToClient(amount, id) {
     const retval = { status: false, msg: "" };
-    //Assume only a client is supposed to do that. 
-    if (this.isClient()) {
+
+    //assumption, a client can't deposit to itself. 
+    if(id > 0 && id == this.id) {
+      retval.msg = 'a client can\'t deposit to itself'
+    } 
+    //Assume only a client is supposed to do that with amount > 0
+    else if(this.isClient() && amount > 0)
+    {
       //Let's just map and reduce based on existing request and compute the sum of unpaid job for this profile. 
-      const sumOfUNpaidJobs = ((await this.getAllActiveAndUnPaidJobs()).map((i) => i.price)).reduce((sum, i) => sum + i);
-      const newBalance = this.balance + parseInt(amount);
+      const sumOfUnpaidJobs = ((await this.getAllActiveAndUnPaidJobs()).map((i) => i.price)).reduce((sum, i) => sum + i);
+      const recipient = await Profile.findByPk(id)
+      
+      const recipientNewBalance = recipient.balance + amount;
+      const senderNewBalance = this.balance - amount;
 
-      //Deposit max represent 25% of the unpaid job
-      if ((amount / sumOfUNpaidJobs) <= 0.25) {
-        const t = await sequelize.transaction();
-        try {
-          //update
-          if (!await this.update({ balance: newBalance }, { transaction: t }))
-            throw new Error("can't update the client balance with the new deposit");
+      if(senderNewBalance < 0) {
+        retval.msg = "the sender balance have less than the amount to pay"
+        return retval;
+      } 
+      //we avoid /0 and ensure we maintain the sender balance with at 25% of the total job to pay.
+      if(sumOfUnpaidJobs > 0 && (senderNewBalance / sumOfUnpaidJobs) < 0.25) {
+        retval.msg = "the sender balance should be maintained at 25% of the total unpaid jobs"
+        return retval;
+      } 
+      const t = await sequelize.transaction();
+      try {
 
-          //commit
-          await t.commit();
+        //Sender
+        if (!await this.update({ balance: senderNewBalance }, { transaction: t }))
+          throw new Error("can't update the sender balance (this client) with the new deposit");
+        //Recipient
+        if (!await Profile.update({ balance: recipientNewBalance }, { where: {id: id}, transaction: t }))
+          throw new Error("can't update the recipient client balance with the new deposit");
 
-          retval.status = true;
-          retval.msg = "sucessfully deposited to client"
+        await t.commit();
 
-        } catch (error) {
-          retval.msg = error.msg;
-          // If the execution reaches this line, an error was thrown.
-          // We rollback the transaction.
-          await t.rollback();
-        }
-      } else {
-        retval.msg = "exceed 25% of the unpaid Jobs to pay : $" + sumOfUNpaidJobs
+        //Some debug
+        retval.status = true;
+        retval.msg = "sucessfully deposited to client";
+        retval.senderBalance = this.balance;
+        retval.recipientBalance = recipient.balance;
+        retval.recipientNewBalance = recipientNewBalance;
+        retval.sumOfSenderUnpaidJobs = sumOfUnpaidJobs;
+        retval.amountToPay = amount;
+        retval.ratioOfNewSenderBalanceVsUnpaidJobs = (senderNewBalance / sumOfUnpaidJobs)*100
+        
+      } catch (error) {
+        retval.msg = error.msg;
+        // If the execution reaches this line, an error was thrown.
+        // We rollback the transaction.
+        await t.rollback();
       }
+    } else {
+      retval.msg = "Not a client or amount == or < 0"
     }
     return retval;
   }
@@ -129,7 +154,7 @@ class Profile extends Sequelize.Model {
       tx: {}
     };
 
-    const contractorToPay = await this.getContractorToPayByJobId(jobId);
+  const contractorToPay = await this.getContractorToPayByJobId(jobId);
     if (contractorToPay) {
 
       const price = contractorToPay.price;

@@ -133,7 +133,7 @@ class Profile extends Sequelize.Model {
         retval.recipientNewBalance = recipientNewBalance;
         retval.sumOfSenderUnpaidJobs = sumOfUnpaidJobs;
         retval.amountToPay = amount;
-        retval.ratio = (senderNewBalance / sumOfUnpaidJobs)*100
+        retval.ratioOfNewSenderBalanceVsUnpaidJobs = (senderNewBalance / sumOfUnpaidJobs)*100
         
       } catch (error) {
         retval.msg = error.msg;
@@ -141,6 +141,8 @@ class Profile extends Sequelize.Model {
         // We rollback the transaction.
         await t.rollback();
       }
+    } else {
+      retval.msg = "Not a client or amount == or < 0"
     }
     return retval;
   }

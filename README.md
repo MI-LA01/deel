@@ -8,8 +8,7 @@ All features were implemented.
 * Please note, did not code in js since long time so certainly ecma syntax may looks oldstyle. 
 * Some workarounds were required but nothing too hackish. 
 * Postman was used locally to request, the corresponding configuration file can be found in this repo / root : `deel.postman_collection.json`
-* Added some tests with jest, again this was brand new to use it and I covered only very basic scenarios. (Contract(s)/Jobs)
-
+* Added some tests with jest, again this was brand new to use it and I covered only very basic scenarios. (Contract(s)/Jobs) : `npm test` 
 -- 
 
 💫 Welcome! 🎉

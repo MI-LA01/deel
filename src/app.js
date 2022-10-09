@@ -40,19 +40,12 @@ app.post('/jobs/:job_id/pay', getProfile, async (req, res) => {
 /**
  * Deposits money into the the the balance of a client, a client can't deposit more than 25% his total of jobs to pay. (at the deposit moment)
  * 
- * Some assumptions as the case is not properly defined : 
- * - I assumed this WAS NOT from an authentified client (authentified through getProfile middleware) to a target client defined by userId. 
- * - Therefore, I assume the deposit can not be more than 25% of the computed sum of all active and unpaid Jobs for the user defined by userId. 
- * - Added a post field amount to send the money. 
+ * A client to deposit money to another one..
  */
-app.post('/balances/deposit/:userId', async (req, res) => {
-    const {Profile} = req.app.get('models')
+app.post('/balances/deposit/:userId', getProfile, async (req, res) => {
     const userId = parseInt(req.params.userId)
     const amount = parseInt(req.query.amount)
-
-    const profile = await Profile.findByPk(userId);
-    if(!profile) return res.status(404).end()
-    const status = await profile.deposit(amount);
+    const status = await req.profile.depositToClient(amount, userId);
     res.json(status)
 })
 

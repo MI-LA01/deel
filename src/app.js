@@ -8,6 +8,11 @@ app.set('sequelize', sequelize)
 app.set('models', sequelize.models)
 
 
+//only for k8s livereadiness
+app.get('/', async(req, res) => {
+    res.json({status: true})
+})
+
 //This API is broken 😵! it should return the contract only if it belongs to the profile calling. better fix that!
 app.get('/contract/:id', getProfile , async (req, res) => {
     const id = parseInt(req.params.id) //missing test. 

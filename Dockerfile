@@ -1,17 +1,23 @@
-# syntax=docker/dockerfile:1
-#Building the app without the dev dependencies. 
-FROM node:16 AS builder
+# Building and testing the app with dev dependencies
+#
+FROM node:16 as builder
 LABEL maintainer "agruet[at].."
-
 WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm install --omit=dev
 COPY . .
-RUN npm run seed
 
-# Added a stage for testing is a good
-# FROM .. as test 
-# npm test
+# Building for production
+#
+FROM node:16 AS tester
+LABEL maintainer "agruet[at].."
+
+WORKDIR /usr/src/app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run seed 
+RUN npm run test 
 
 # Exposing the service from a distroless optimise the size. 
 # 

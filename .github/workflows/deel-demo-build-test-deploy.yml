@@ -1,0 +1,56 @@
+name: deel-demo-build-test-deploy
+
+on:
+  push:
+    branches: ['feature/**']
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    # Environment variables available to all jobs and steps in this workflow
+    #  GKE_EMAIL: ${{ secrets.GKE_EMAIL }} 
+    #  GKE_KEY: ${{ secrets.GKE_KEY }}
+    env:
+      GITHUB_SHA: ${{ github.sha }} 
+      GITHUB_REF: ${{ github.ref }} 
+      IMAGE: deel-app
+      REGISTRY_HOSTNAME: gcr.io/deel-cloud-demo
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+        
+    - uses: google-github-actions/setup-gcloud@v0.6.0
+      with:
+        service_account_key: ${{ secrets.ARTIFACTORY_GCLOUD }} 
+        
+    # Configure docker to use the gcloud command-line tool as a credential helper
+    - run: |
+        # Set up docker to authenticate
+        # via gcloud command-line tool.
+        gcloud auth configure-docker
+      
+    - name: Test the deel-api through a docker image. (DinD)
+      run: |
+        #GITHUB_REF as tag
+        export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
+        echo $TAG
+        docker build --target tester -t "$REGISTRY_HOSTNAME"/"$IMAGE":"$TAG" .
+        
+#     # Push the Docker image to Google Container Registry
+#     - name: Publish
+#       run: |
+#         export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
+#         echo "$REGISTRY_HOSTNAME"/"$IMAGE":"$TAG"
+        
+#         docker push "$REGISTRY_HOSTNAME"/"$IMAGE":"$TAG"
+#         docker tag "$REGISTRY_HOSTNAME"/"$IMAGE":"$TAG" "$REGISTRY_HOSTNAME"/"$IMAGE":latest
+#         docker push "$REGISTRY_HOSTNAME"/"$IMAGE":latest
+#     - name: deployment to gcloud
+#       run: |
+#         # Set up docker to authenticate
+#         # via gcloud command-line tool.
+#         gcloud run deploy cbs --image "$REGISTRY_HOSTNAME"/"$IMAGE":latest --platform managed --region=us-central1 --project crypto-babes
+          
+        

@@ -4,8 +4,8 @@ locals {
   cluster_master_ip_cidr_range    = "10.100.100.0/28"
   cluster_pods_ip_cidr_range      = "10.101.0.0/16"
   cluster_services_ip_cidr_range  = "10.102.0.0/16"
-  peer_ips                        = ["1.1.1.1", "2.2.2.2"]
-  remote_subnet                   = ["10.8.0.0/22", "10.9.80.0/24"]
+  # peer_ips                        = ["1.1.1.1", "2.2.2.2"]
+  # remote_subnet                   = ["10.8.0.0/22", "10.9.80.0/24"]
 }
 
 resource "google_compute_network" "vpc" {

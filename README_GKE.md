@@ -47,8 +47,6 @@ kubectl config view
 kubectl cluster-info
 ```
 
-
-
 ## VPN 
 An IPSec VPN is provisonned by terraform on the bastion host to access remotely the private cluster. To configure the local vpn client you can run : 
 ```
@@ -82,6 +80,25 @@ gcloud auth configure-docker europe-west3-docker.pkg.dev
 docker build -t gcr.io/deel-cloud-demo/deel-app:0.2.0
 docker push
 ```
+
+
+## Helm chart 
+Install/Unistall from local chart. 
+```
+helm install deel-app ./
+helm uninstall deel-app 
+```
+
+To authenticate and push to remote helm chart. 
+```
+gcloud artifacts repositories create deel-helm-repo --repository-format=docker --location=europe-west3 --description="Deel Demo Helm repository"
+gcloud auth print-access-token | helm registry login -u oauth2accesstoken --password-stdin https://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
+Login Succeeded
+helm push deel-app-0.1.0.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
+helm install deel-app oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo/deel-app --version 0.1.0
+```
+
+To deploy 
 
 ## Ngnix Ingress
 ```

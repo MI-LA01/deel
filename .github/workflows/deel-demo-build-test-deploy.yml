@@ -5,7 +5,7 @@ on:
     branches: ['feature/**']
   
 jobs:
-  tag-and-release:
+  build:
     runs-on: ubuntu-latest
     
     # Environment variables available to all jobs and steps in this workflow
@@ -29,11 +29,12 @@ jobs:
         service_account_key: ${{ secrets.ARTIFACTORY_GCLOUD }} 
 
     - name: Git Version
-      id: version
       uses: codacy/git-version@2.5.4
 
     - name: Get Version 
-      run: echo "New Version : $VERSION"
+      run: echo "This is my $VERSION"
+
+
 
     # - name: 'Create new milestone'
     #   id: createmilestone

@@ -67,11 +67,10 @@ jobs:
           echo -e "\r\nappVersion: ${{ steps.version.outputs.version }}\r\n" >> ./chart/Chart.yaml &&
           cat ./chart/Chart.yaml
 
-    - name: Helm 
+    - name: Helm package and publish 
       uses: WyriHaximus/github-action-helm3@v2
-      run: |
-          helm package ./chart
-          helm push deel-app-0.1.0.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
+      with:
+          exec: helm package ./chart && helm push deel-app-0.1.0.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
           
 #     - name: deployment to gcloud
 #       run: |

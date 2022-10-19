@@ -70,7 +70,7 @@ jobs:
     - name: Helm chart package
       uses: WyriHaximus/github-action-helm3@v2
       with:
-          run: |
+          exec: |
             helm package ./chart
             HELM_EXPERIMENTAL_OCI=1 helm chart push ./deel-app-0.1.0.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
           

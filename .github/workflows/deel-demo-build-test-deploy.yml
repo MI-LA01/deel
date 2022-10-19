@@ -29,10 +29,12 @@ jobs:
         service_account_key: ${{ secrets.ARTIFACTORY_GCLOUD }} 
 
     - name: Git Version
+      id: version
       uses: codacy/git-version@2.5.4
 
     - name: Get Version 
-      run: echo "This is my ${{ VERSION }}"
+      run: |
+          echo ${{ steps.version.outputs.version }}
 
 
 

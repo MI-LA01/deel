@@ -21,6 +21,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2.3.3
       with:
+        ref: ${{ github.head_ref }}
         fetch-depth: 0
         
     - uses: google-github-actions/setup-gcloud@v0.6.0
@@ -28,7 +29,11 @@ jobs:
         service_account_key: ${{ secrets.ARTIFACTORY_GCLOUD }} 
 
     - name: Git Version
+      id: version
       uses: codacy/git-version@2.5.4
+
+    - name: Get Version 
+      run: echo "New Version : $VERSION"
 
     # - name: 'Create new milestone'
     #   id: createmilestone

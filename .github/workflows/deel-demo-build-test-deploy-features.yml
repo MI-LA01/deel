@@ -70,13 +70,14 @@ jobs:
     - name: Helm chart package
       uses: WyriHaximus/github-action-helm3@v2
       with:
-          exec: helm package ./chart 
+          exec: helm package ./chart && HELM_EXPERIMENTAL_OCI=1 helm chart push /github/workspace/deel-app-0.1.0.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
           
-    - name: Helm chart publish
-      uses: WyriHaximus/github-action-helm3@v2
-      with:
-          exec: HELM_EXPERIMENTAL_OCI=1 helm chart push /github/workspace/deel-app-0.1.0.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
-    
+
+
+    # - name: GCP - Register domain name 
+    #   uses: WyriHaximus/github-action-helm3@v2
+    #   with:
+    #       exec: HELM_EXPERIMENTAL_OCI=1 helm chart push /github/workspace/deel-app-0.1.0.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
           
 #     - name: deployment to gcloud
 #       run: |

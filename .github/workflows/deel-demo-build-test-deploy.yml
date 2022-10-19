@@ -5,7 +5,7 @@ on:
     branches: ['feature/**']
   
 jobs:
-  build:
+  tag-and-release:
     runs-on: ubuntu-latest
     
     # Environment variables available to all jobs and steps in this workflow
@@ -24,19 +24,42 @@ jobs:
     - uses: google-github-actions/setup-gcloud@v0.6.0
       with:
         service_account_key: ${{ secrets.ARTIFACTORY_GCLOUD }} 
-        
-    # Configure docker to use the gcloud command-line tool as a credential helper
-    - run: |
-        # Set up docker to authenticate
-        # via gcloud command-line tool.
-        gcloud auth configure-docker
+
+    - name: 'Get Previous tag'
+      id: previoustag
+      uses: "WyriHaximus/github-action-get-previous-tag@v1"
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+    - name: 'Get next minor version'
+      id: semvers
+      uses: "WyriHaximus/github-action-next-semvers@v1"
+      with:
+        version: ${{ steps.previoustag.outputs.tag }}
+
+    - name: 'Create new milestone'
+      id: createmilestone
+      uses: "WyriHaximus/github-action-create-milestone@v1"
+      with:
+        title: ${{ steps.semvers.outputs.patch }}
+        run: echo "::workflow-command parameter1={data},parameter2={data}::{command value}"
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+
+
+    # # Configure docker to use the gcloud command-line tool as a credential helper
+    # - run: |
+    #     # Set up docker to authenticate
+    #     # via gcloud command-line tool.
+    #     gcloud auth configure-docker
       
-    - name: Test the deel-api through a docker image. (DinD)
-      run: |
-        #GITHUB_REF as tag
-        export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
-        echo $TAG
-        DOCKER_BUILDKIT=1 docker build --target tester -t "$REGISTRY_HOSTNAME"/"$IMAGE":"$TAG" .
+    # - name: Test the deel-api through a docker image. (DinD)
+    #   run: |
+    #     #GITHUB_REF as tag
+    #     export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
+    #     echo $TAG
+    #     DOCKER_BUILDKIT=1 docker build --target tester -t "$REGISTRY_HOSTNAME"/"$IMAGE":"$TAG" .
         
 #     # Push the Docker image to Google Container Registry
 #     - name: Publish

@@ -1,0 +1,82 @@
+name: deel-demo-build-test-deploy-feature
+
+on:
+  push:
+    branches: ['feature/**']
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    # Environment variables available to all jobs and steps in this workflow
+    #  GKE_EMAIL: ${{ secrets.GKE_EMAIL }} 
+    #  GKE_KEY: ${{ secrets.GKE_KEY }}
+    env:
+      GITHUB_SHA: ${{ github.sha }} 
+      GITHUB_REF: ${{ github.ref }} 
+      IMAGE: deel-app
+      REGISTRY_HOSTNAME: gcr.io/deel-cloud-demo
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2.3.3
+      with:
+        ref: ${{ github.head_ref }}
+        fetch-depth: 0
+        
+    - uses: google-github-actions/setup-gcloud@v0.6.0
+      with:
+        service_account_key: ${{ secrets.ARTIFACTORY_GCLOUD }} 
+
+    - name: Git Version
+      id: version
+      uses: codacy/git-version@2.5.4
+
+    # - name: Get Version 
+    #   run: |
+    #       echo ${{ steps.version.outputs.version }}
+
+    # Configure docker to use the gcloud command-line tool as a credential helper
+    - name: Artifactory authentication 
+      run: |
+        # Set up docker to authenticate and helm repo as well
+        # via gcloud command-line tool.
+        gcloud auth configure-docker
+        gcloud auth print-access-token | helm registry login -u oauth2accesstoken --password-stdin https://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
+      
+    - name: Test the deel-api through a docker image. (DinD)
+      run: |
+        DOCKER_BUILDKIT=1 docker build --target tester -t "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}" .
+
+    - name: Build the service container. (DinD)
+      run: |
+        DOCKER_BUILDKIT=1 docker build --target service -t "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}" .
+
+    # Push the Docker image to Google Container Registry
+    - name: Publish
+      run: |
+        export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
+        echo "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}"
+        
+        docker push "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}"
+    
+    - name: Helm Chart preparation
+      run: | 
+          mv ./chart/Chart.yaml ./chart/Chart.old.yaml &&
+          cat ./chart/Chart.old.yaml | grep -v appVersion > ./chart/Chart.yaml &&
+          echo -e "\r\nappVersion: ${{ steps.version.outputs.version }}\r\n" >> ./chart/Chart.yaml &&
+          cat ./chart/Chart.yaml
+
+    - name: Helm 
+      uses: WyriHaximus/github-action-helm3@v2
+      run: |
+          helm package ./chart
+          helm push deel-app-0.1.0.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
+          
+#     - name: deployment to gcloud
+#       run: |
+#         # Set up docker to authenticate
+#         # via gcloud command-line tool.
+#         gcloud run deploy cbs --image "$REGISTRY_HOSTNAME"/"$IMAGE":latest --platform managed --region=us-central1 --project crypto-babes
+          
+        

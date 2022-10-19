@@ -43,7 +43,23 @@ jobs:
         # via gcloud command-line tool.
         gcloud auth configure-docker
         gcloud auth print-access-token | helm registry login -u oauth2accesstoken --password-stdin https://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
-      
+
+    - name: Helm chart prepare
+      run: | 
+          mv ./chart/Chart.yaml ./chart/Chart.old.yaml &&
+          cat ./chart/Chart.old.yaml | grep -v appVersion > ./chart/Chart.yaml &&
+          echo -e "\r\nappVersion: ${{ steps.version.outputs.version }}\r\n" >> ./chart/Chart.yaml &&
+          cat ./chart/Chart.yaml
+
+    - name: Helm chart package
+      uses: hiberbee/github-action-helm@1.5.0
+      with:
+          command: "helm package ./"
+    
+    - name: Helm publish 
+      run: HELM_EXPERIMENTAL_OCI=1 helm push ./deel-app-0.1.0.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
+          
+
     - name: Docker test (deel-api testing). (DinD)
       run: |
         DOCKER_BUILDKIT=1 docker build --target tester -t "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}" .
@@ -70,10 +86,10 @@ jobs:
     - name: Helm chart package
       uses: hiberbee/github-action-helm@1.5.0
       with:
-          run: "helm package ./"
+          command: "helm package ./"
     
     - name: Helm publish 
-      run: HELM_EXPERIMENTAL_OCI=1 helm push ./deel-app-0.1.0.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo"
+      run: HELM_EXPERIMENTAL_OCI=1 helm push ./deel-app-0.1.0.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
           
           
 

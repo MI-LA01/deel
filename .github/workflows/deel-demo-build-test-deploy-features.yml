@@ -72,8 +72,8 @@ jobs:
       with:
           command: "helm package ./"
     
-    - name: Helm publish 
-      run: HELM_EXPERIMENTAL_OCI=1 helm push ./deel-app-0.1.0.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
+    # - name: Helm publish 
+    #   run: HELM_EXPERIMENTAL_OCI=1 helm push ./deel-app-0.1.0.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
           
 
     # - name: GCP - Register domain name 

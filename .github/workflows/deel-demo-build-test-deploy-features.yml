@@ -72,6 +72,8 @@ jobs:
       with:
           exec: |
             helm package ./chart
+            ls -la 
+            ls -la ./chart 
             HELM_EXPERIMENTAL_OCI=1 helm chart push ./deel-app-0.1.0.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
           
 

@@ -28,7 +28,7 @@ jobs:
       with:
         service_account_key: ${{ secrets.ARTIFACTORY_GCLOUD }} 
 
-    - name: Git Version
+    - name: Version
       id: version
       uses: codacy/git-version@2.5.4
 
@@ -44,38 +44,38 @@ jobs:
         gcloud auth configure-docker
         gcloud auth print-access-token | helm registry login -u oauth2accesstoken --password-stdin https://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
       
-    - name: Test the deel-api through a docker image. (DinD)
+    - name: Docker test (deel-api testing). (DinD)
       run: |
         DOCKER_BUILDKIT=1 docker build --target tester -t "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}" .
 
-    - name: Build the service container. (DinD)
+    - name: Docker build (service container). (DinD)
       run: |
         DOCKER_BUILDKIT=1 docker build --target service -t "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}" .
 
     # Push the Docker image to Google Container Registry
-    - name: Publish
+    - name: Docker Publish
       run: |
         export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
         echo "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}"
         
         docker push "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}"
     
-    - name: Helm Chart preparation
+    - name: Helm chart prepare
       run: | 
           mv ./chart/Chart.yaml ./chart/Chart.old.yaml &&
           cat ./chart/Chart.old.yaml | grep -v appVersion > ./chart/Chart.yaml &&
           echo -e "\r\nappVersion: ${{ steps.version.outputs.version }}\r\n" >> ./chart/Chart.yaml &&
           cat ./chart/Chart.yaml
 
-    - name: Helm package
+    - name: Helm chart package
       uses: WyriHaximus/github-action-helm3@v2
       with:
           exec: helm package ./chart 
           
-    - name: Helm Publish
+    - name: Helm chart publish
       uses: WyriHaximus/github-action-helm3@v2
       with:
-          exec: HELM_EXPERIMENTAL_OCI=1 helm chart push deel-app-0.1.0.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
+          exec: HELM_EXPERIMENTAL_OCI=1 helm chart push /github/workspace/deel-app-0.1.0.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
     
           
 #     - name: deployment to gcloud

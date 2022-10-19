@@ -32,36 +32,25 @@ jobs:
       id: version
       uses: codacy/git-version@2.5.4
 
-    - name: Get Version 
-      run: |
-          echo ${{ steps.version.outputs.version }}
-
-
-
-    # - name: 'Create new milestone'
-    #   id: createmilestone
-    #   uses: "WyriHaximus/github-action-create-milestone@v1"
-    #   with:
-    #     title: ${{ steps.semvers.outputs.patch }}
-    #     run: echo "::workflow-command parameter1={data},parameter2={data}::{command value}"
-    #   env:
-    #     GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-
-
-
-    # # Configure docker to use the gcloud command-line tool as a credential helper
-    # - run: |
-    #     # Set up docker to authenticate
-    #     # via gcloud command-line tool.
-    #     gcloud auth configure-docker
-      
-    # - name: Test the deel-api through a docker image. (DinD)
+    # - name: Get Version 
     #   run: |
-    #     #GITHUB_REF as tag
-    #     export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
-    #     echo $TAG
-    #     DOCKER_BUILDKIT=1 docker build --target tester -t "$REGISTRY_HOSTNAME"/"$IMAGE":"$TAG" .
-        
+    #       echo ${{ steps.version.outputs.version }}
+
+    # Configure docker to use the gcloud command-line tool as a credential helper
+    - name: Artifactory authentication 
+      run: |
+        # Set up docker to authenticate
+        # via gcloud command-line tool.
+        gcloud auth configure-docker
+      
+    - name: Test the deel-api through a docker image. (DinD)
+      run: |
+        DOCKER_BUILDKIT=1 docker build --target tester -t "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}" .
+
+    - name: Build the service container. (DinD)
+      run: |
+        DOCKER_BUILDKIT=1 docker build --target service -t "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}" .
+
 #     # Push the Docker image to Google Container Registry
 #     - name: Publish
 #       run: |

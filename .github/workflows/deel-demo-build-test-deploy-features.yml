@@ -78,8 +78,8 @@ jobs:
         changes: |
           {
             "image.tag": "${{ steps.version.outputs.version }}",
-            "hosts[0].host": "${{ GITHUB_SHA }}-deel.grt.soy",
-            "tls[0].secretName.host":  "${{ GITHUB_SHA }}-deel.grt.soy"
+            "hosts[0].host": "${{ env.GITHUB_SHA }}"-deel.grt.soy",
+            "tls[0].secretName.host":  "${{ env.GITHUB_SHA }}-deel.grt.soy"
           }
         commitChange: false
         updateFile: true

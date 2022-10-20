@@ -33,6 +33,32 @@ jobs:
       id: version
       uses: codacy/git-version@2.5.4
 
+    # - name: Get Version 
+    #   run: |
+    #       echo ${{ steps.version.outputs.version }}
+
+    # Configure docker to use the gcloud command-line tool as a credential helper
+    - name: Artifactory authentication 
+      run: |
+        # Set up docker to authenticate and helm repo as well
+        # via gcloud command-line tool.
+        gcloud auth configure-docker
+        gcloud auth print-access-token | helm registry login -u oauth2accesstoken --password-stdin https://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
+
+    - name: Docker test (deel-api testing). (DinD)
+      run: DOCKER_BUILDKIT=1 docker build --target tester -t "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}" .
+
+    - name: Docker build (service container). (DinD)
+      run: DOCKER_BUILDKIT=1 docker build --target service -t "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}" .
+
+    # Push the Docker image to Google Container Registry
+    - name: Docker Publish
+      run: |
+        export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
+        echo "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}"
+        
+        docker push "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}"
+
     - name: Update Helm/Chart.yaml
       uses: fjogeleit/yaml-update-action@main
       with:
@@ -63,34 +89,6 @@ jobs:
 
     - name: Show Values.yaml update
       run: cat chart/values.yaml
-
-    # - name: Get Version 
-    #   run: |
-    #       echo ${{ steps.version.outputs.version }}
-
-    # Configure docker to use the gcloud command-line tool as a credential helper
-    - name: Artifactory authentication 
-      run: |
-        # Set up docker to authenticate and helm repo as well
-        # via gcloud command-line tool.
-        gcloud auth configure-docker
-        gcloud auth print-access-token | helm registry login -u oauth2accesstoken --password-stdin https://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
-
-    - name: Docker test (deel-api testing). (DinD)
-      run: DOCKER_BUILDKIT=1 docker build --target tester -t "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}" .
-
-    - name: Docker build (service container). (DinD)
-      run: DOCKER_BUILDKIT=1 docker build --target service -t "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}" .
-
-    # Push the Docker image to Google Container Registry
-    - name: Docker Publish
-      run: |
-        export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
-        echo "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}"
-        
-        docker push "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}"
-
-
 
     - name: Helm chart package
       run: helm package ./chart

@@ -74,7 +74,7 @@ jobs:
     - name: Update Helm/Values.yaml 
       uses: fjogeleit/yaml-update-action@main
       with:
-        valueFile: 'chart/Values.yaml'
+        valueFile: 'chart/values.yaml'
         changes: |
           {
             "image.tag": "${{ steps.version.outputs.version }}",
@@ -96,6 +96,7 @@ jobs:
 
     - name: Helm publish
       run: HELM_EXPERIMENTAL_OCI=1 helm push ./deel-app-${{ env.CHART_VERSION }}.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo    
+
 
     # - name: GCP - Register domain name 
     #   uses: WyriHaximus/github-action-helm3@v2

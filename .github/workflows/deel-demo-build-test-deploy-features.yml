@@ -51,7 +51,7 @@ jobs:
         valueFile: 'chart/values.yaml'
         changes: |
           {
-            "image.tag": "${{ steps.version.outputs.version }}"
+            "image.tag": "${{ steps.version.outputs.version }}",
             "ingress.hosts[0].host": "${{ env.GITHUB_SHA }}-deel.grt.soy"
           }
         commitChange: false

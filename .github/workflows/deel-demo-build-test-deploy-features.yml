@@ -89,7 +89,7 @@ jobs:
 
 
     - name: Show Values.yaml update
-      run: cat chart/Chart.yaml
+      run: cat chart/values.yaml
 
     - name: Helm chart package
       run: helm package ./chart

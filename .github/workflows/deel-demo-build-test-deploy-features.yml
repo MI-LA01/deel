@@ -61,17 +61,17 @@ jobs:
         
         docker push "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}"
 
-     - name: Update Chart.yaml 
-        uses: fjogeleit/yaml-update-action@main
-        with:
-          valueFile: 'chart/Chart.yaml'
-          changes: |
-            {
-              "appVersion": "${{ steps.version.outputs.version }}",
-              "version": "${{ env.CHART_VERSION }}"
-            }
-          commitChange: false
-          updateFile: true
+    - name: Update Chart.yaml 
+      uses: fjogeleit/yaml-update-action@main
+      with:
+        valueFile: 'chart/Chart.yaml'
+        changes: |
+          {
+            "appVersion": "${{ steps.version.outputs.version }}",
+            "version": "${{ env.CHART_VERSION }}"
+          }
+        commitChange: false
+        updateFile: true
   
     - name: Show Chart.yaml update
       run: cat chart/Chart.yaml

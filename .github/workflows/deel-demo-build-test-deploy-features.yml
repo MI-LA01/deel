@@ -1,12 +1,12 @@
 name: deel-demo-build-test-deploy-feature
 
-env:
-  CHART_VERSION: 0.1.1
-
 on:
   push:
     branches: ['feature/**']
-  
+
+env:
+  CHART_VERSION: "0.1.1"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -70,7 +70,7 @@ jobs:
            changes: |
             {
               "appVersion": "${{ steps.version.outputs.version }}",
-              "version": $CHART_VERSION
+              "version": "${{ env.CHART_VERSION }}"
             }
           commitChange: false
           updateFile: true
@@ -79,12 +79,10 @@ jobs:
       run: cat chart/Chart.yaml
 
     - name: Helm chart package
-      run: |
-           helm package ./chart
+      run: helm package ./chart
 
     - name: Helm publish
-      run: |
-          HELM_EXPERIMENTAL_OCI=1 helm push ./deel-app-0.1.0.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo    
+      run: HELM_EXPERIMENTAL_OCI=1 helm push ./deel-app-0.1.0.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo    
 
     # - name: GCP - Register domain name 
     #   uses: WyriHaximus/github-action-helm3@v2

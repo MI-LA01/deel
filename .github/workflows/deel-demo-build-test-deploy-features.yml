@@ -4,9 +4,6 @@ on:
   push:
     branches: ['feature/**']
 
-env:
-  CHART_VERSION: "0.1.1"
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -69,8 +66,7 @@ jobs:
           valueFile: 'chart/Chart.yaml'
            changes: |
             {
-              "appVersion": "${{ steps.version.outputs.version }}",
-              "version": "${{ env.CHART_VERSION }}"
+              "appVersion": "${{ steps.version.outputs.version }}"
             }
           commitChange: false
           updateFile: true

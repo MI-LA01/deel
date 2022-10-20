@@ -33,6 +33,35 @@ jobs:
       id: version
       uses: codacy/git-version@2.5.4
 
+    - name: Update Helm/Chart.yaml
+      uses: fjogeleit/yaml-update-action@main
+      with:
+        valueFile: 'chart/Chart.yaml'
+        changes: |
+          {
+            "appVersion": "${{ steps.version.outputs.version }}",
+            "version": "${{ env.CHART_VERSION }}"
+          }
+        commitChange: false
+        updateFile: true
+
+    - name: Update Helm/Values.yaml 
+      uses: fjogeleit/yaml-update-action@main
+      with:
+        valueFile: 'chart/values.yaml'
+        changes: |
+          {
+            "image.tag": "${{ steps.version.outputs.version }}"
+          }
+        commitChange: false
+        updateFile: true
+  
+    - name: Show Chart.yaml update
+      run: cat chart/Chart.yaml
+
+    - name: Show Values.yaml update
+      run: cat chart/values.yaml
+
     # - name: Get Version 
     #   run: |
     #       echo ${{ steps.version.outputs.version }}
@@ -59,37 +88,7 @@ jobs:
         
         docker push "$REGISTRY_HOSTNAME"/"$IMAGE":"${{ steps.version.outputs.version }}"
 
-    - name: Update Helm/Chart.yaml 
-      uses: fjogeleit/yaml-update-action@main
-      with:
-        valueFile: 'chart/Chart.yaml'
-        changes: |
-          {
-            "appVersion": "${{ steps.version.outputs.version }}",
-            "version": "${{ env.CHART_VERSION }}"
-          }
-        commitChange: false
-        updateFile: true
 
-    - name: Update Helm/Values.yaml 
-      uses: fjogeleit/yaml-update-action@main
-      with:
-        valueFile: 'chart/values.yaml'
-        changes: |
-          {
-            "image.tag": "${{ steps.version.outputs.version }}",
-            "hosts[0].host": "${{ env.GITHUB_SHA }}"-deel.grt.soy",
-            "tls[0].secretName.host":  "${{ env.GITHUB_SHA }}-deel.grt.soy"
-          }
-        commitChange: false
-        updateFile: true
-  
-    - name: Show Chart.yaml update
-      run: cat chart/Chart.yaml
-
-
-    - name: Show Values.yaml update
-      run: cat chart/values.yaml
 
     - name: Helm chart package
       run: helm package ./chart

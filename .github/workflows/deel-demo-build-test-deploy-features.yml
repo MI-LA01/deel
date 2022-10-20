@@ -12,6 +12,7 @@ jobs:
     #  GKE_EMAIL: ${{ secrets.GKE_EMAIL }} 
     #  GKE_KEY: ${{ secrets.GKE_KEY }}
     env:
+      CHART_VERSION: "0.1.1"
       GITHUB_SHA: ${{ github.sha }} 
       GITHUB_REF: ${{ github.ref }} 
       IMAGE: deel-app
@@ -66,7 +67,8 @@ jobs:
           valueFile: 'chart/Chart.yaml'
            changes: |
             {
-              "appVersion": "${{ steps.version.outputs.version }}"
+              "appVersion": "${{ steps.version.outputs.version }}",
+              "version": "${{ env.CHART_VERSION }}"
             }
           commitChange: false
           updateFile: true

@@ -1,4 +1,4 @@
-name: deel-demo-build-test-deploy-feature
+name: deel-demo-build-test-publish-feature
 
 on:
   push:
@@ -94,18 +94,4 @@ jobs:
       run: helm package ./chart
 
     - name: Helm publish
-      run: HELM_EXPERIMENTAL_OCI=1 helm push ./deel-app-${{ env.CHART_VERSION }}.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo    
-
-
-    # - name: GCP - Register domain name 
-    #   uses: WyriHaximus/github-action-helm3@v2
-    #   with:
-    #       exec: HELM_EXPERIMENTAL_OCI=1 helm chart push /github/workspace/deel-app-0.1.0.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
-          
-#     - name: deployment to gcloud
-#       run: |
-#         # Set up docker to authenticate
-#         # via gcloud command-line tool.
-#         gcloud run deploy cbs --image "$REGISTRY_HOSTNAME"/"$IMAGE":latest --platform managed --region=us-central1 --project crypto-babes
-          
-        
+      run: HELM_EXPERIMENTAL_OCI=1 helm push ./deel-app-${{ env.CHART_VERSION }}.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo

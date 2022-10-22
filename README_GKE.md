@@ -92,8 +92,16 @@ helm uninstall deel-app
 To authenticate and push to remote helm chart. 
 ```
 gcloud artifacts repositories create deel-helm-repo --repository-format=docker --location=europe-west3 --description="Deel Demo Helm repository"
-gcloud auth print-access-token | helm registry login -u oauth2accesstoken --password-stdin https://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
-Login Succeeded
+
+
+export GOOGLE_APPLICATION_CREDENTIALS=deel-cloud-demo-41d9821b7384.json
+gcloud auth application-default print-access-token
+gcloud auth application-default print-access-token | helm registry login -u oauth2accesstoken --password-stdin https://europe-west3-docker.pkg.dev
+
+
+helm install deel-app oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo/deel-app --version 0.1.1
+
+
 helm push deel-app-0.1.0.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
 helm install deel-app oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo/deel-app --version 0.1.0
 ```
@@ -232,6 +240,95 @@ gcloud compute firewall-rules list --filter 'name~^gke' --format 'table(
 
 gcloud compute firewall-rules create deel-app-cluster-master-nginx-ingress --action ALLOW --direction INGRESS  --source-ranges 10.100.100.0/28 --rules tcp:8443 --target-tags gke-deel-app-cluster-dbe0bb6b-node --project deel-cloud-demo
 ```
+
+Automated DNS record with Nginx/Ingress via Workload Identity 
+
+DNS_SA_NAME="external-dns-sa"
+GKE_PROJECT_ID="deel-cloud-demo" 
+DNS_SA_EMAIL="$DNS_SA_NAME@${GKE_PROJECT_ID}.iam.gserviceaccount.com"
+gcloud iam service-accounts create $DNS_SA_NAME --display-name $DNS_SA_NAME
+
+gcloud projects add-iam-policy-binding $GKE_PROJECT_ID --member serviceAccount:$DNS_SA_EMAIL --role "roles/dns.admin"
+gcloud iam service-accounts add-iam-policy-binding $DNS_SA_EMAIL --role "roles/iam.workloadIdentityUser" --member "serviceAccount:$GKE_PROJECT_ID.svc.id.goog[default/external-dns]"
+kubectl create --namespace "default" -f x.yaml
+kubectl annotate serviceaccount "external-dns" --namespace default "iam.gke.io/gcp-service-account=$DNS_SA_EMAIL"
+kubectl patch deployment "external-dns" --namespace default --patch '{"spec": {"template": {"spec": {"nodeSelector": {"iam.gke.io/gke-metadata-server-enabled": "true"}}}}}'
+
+https://github.com/kubernetes-sigs/external-dns/blob/master/docs/tutorials/gke.md#worker-node-service-account
+
+```
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: external-dns
+  labels:
+    app.kubernetes.io/name: external-dns
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: external-dns
+  labels:
+    app.kubernetes.io/name: external-dns
+rules:
+  - apiGroups: [""]
+    resources: ["services","endpoints","pods","nodes"]
+    verbs: ["get","watch","list"]
+  - apiGroups: ["extensions","networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get","watch","list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: external-dns-viewer
+  labels:
+    app.kubernetes.io/name: external-dns
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: external-dns
+subjects:
+  - kind: ServiceAccount
+    name: external-dns
+    namespace: default # change if namespace is not 'default'
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: external-dns
+  labels:
+    app.kubernetes.io/name: external-dns  
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: external-dns
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: external-dns
+    spec:
+      serviceAccountName: external-dns
+      containers:
+        - name: external-dns
+          image: k8s.gcr.io/external-dns/external-dns:v0.11.0
+          args:
+            - --source=service
+            - --source=ingress
+            - --domain-filter=grt.soy # will make ExternalDNS see only the hosted zones matching provided domain, omit to process all available hosted zones
+            - --provider=google
+            - --log-format=json # google cloud logs parses severity of the "text" log format incorrectly
+            - --google-project=deel-cloud-demo # Use this to specify a project different from the one external-dns is running inside
+            - --google-zone-visibility=public # Use this to filter to only zones with this visibility. Set to either 'public' or 'private'. Omitting will match public and private zones
+            - --policy=upsert-only # would prevent ExternalDNS from deleting any records, omit to enable full synchronization
+            - --registry=txt
+            - --txt-owner-id=my-identifier
+```
+
+kubectl apply -f 
+
 
 ## Readings :
 

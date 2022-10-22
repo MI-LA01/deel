@@ -93,11 +93,9 @@ To authenticate and push to remote helm chart.
 ```
 gcloud artifacts repositories create deel-helm-repo --repository-format=docker --location=europe-west3 --description="Deel Demo Helm repository"
 
-
 export GOOGLE_APPLICATION_CREDENTIALS=deel-cloud-demo-41d9821b7384.json
 gcloud auth application-default print-access-token
 gcloud auth application-default print-access-token | helm registry login -u oauth2accesstoken --password-stdin https://europe-west3-docker.pkg.dev
-
 
 helm install deel-app oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo/deel-app --version 0.1.1
 

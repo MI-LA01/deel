@@ -10,8 +10,7 @@ env:
   IMAGE: deel-app
   REGISTRY_HOSTNAME: gcr.io/deel-cloud-demo
 
-on:  
-  push:
+on:
   pull_request:
     branches:
       - master

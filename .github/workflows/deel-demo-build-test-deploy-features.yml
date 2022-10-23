@@ -37,6 +37,10 @@ jobs:
     #   run: |
     #       echo ${{ steps.version.outputs.version }}
 
+    - name: Get Refname
+      run: | 
+        echo ${{ github.ref }}
+
     # Configure docker to use the gcloud command-line tool as a credential helper
     - name: Artifactory authentication 
       run: |

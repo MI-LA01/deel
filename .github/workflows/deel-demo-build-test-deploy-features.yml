@@ -42,7 +42,7 @@ jobs:
       id: findandreplace
       with:
         source: ${{ github.ref }}
-        find: 'refs/heads/feature'
+        find: 'refs/heads/feature/'
         replace: ''
 
     # Configure docker to use the gcloud command-line tool as a credential helper
@@ -108,4 +108,4 @@ jobs:
       run: helm package ./chart
 
     - name: Helm publish
-      run: HELM_EXPERIMENTAL_OCI=1 helm push ./deel-app-${{ env.CHART_VERSION }}.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
+      run: HELM_EXPERIMENTAL_OCI=1 helm push ./deel-app-${{ steps.findandreplace.outputs.value }}-${{ env.CHART_VERSION }}.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo

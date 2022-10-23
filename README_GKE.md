@@ -320,7 +320,7 @@ spec:
             - --log-format=json # google cloud logs parses severity of the "text" log format incorrectly
             - --google-project=deel-cloud-demo # Use this to specify a project different from the one external-dns is running inside
             - --google-zone-visibility=public # Use this to filter to only zones with this visibility. Set to either 'public' or 'private'. Omitting will match public and private zones
-            - --policy=upsert-only # would prevent ExternalDNS from deleting any records, omit to enable full synchronization
+            - --policy=sync # upsert-only would prevent ExternalDNS from deleting any records, omit to enable full synchronization
             - --registry=txt
             - --txt-owner-id=my-identifier
 ```

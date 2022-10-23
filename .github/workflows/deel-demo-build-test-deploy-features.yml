@@ -83,7 +83,7 @@ jobs:
           {
             "image.tag": "${{ steps.version.outputs.version }}",
             "ingress.hosts[0].host": "${{ steps.vars.outputs.sha_short }}-deel.grt.soy",
-            "ingress.tls[0].secretName": "deel-app-tls-${{ steps.vars.outputs.sha_short }}"
+            "ingress.tls[0].secretName": "deel-app-tls-${{ steps.vars.outputs.sha_short }}",
             "ingress.tls[0].hosts[0]": "${{ steps.vars.outputs.sha_short }}-deel.grt.soy"
           }
         commitChange: false

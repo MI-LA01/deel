@@ -110,9 +110,3 @@ jobs:
 
     - name: Helm publish
       run: HELM_EXPERIMENTAL_OCI=1 helm push ./deel-app-${{ steps.findandreplace.outputs.value }}-${{ env.CHART_VERSION }}.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
-
-  # deployer:
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #   - name: Checkout

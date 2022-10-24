@@ -36,13 +36,13 @@ jobs:
       run: |
           echo ${{ steps.version.outputs.version }}
 
-    # - name: Run find-and-replace to remove refs/heads/
-    #   uses: mad9000/actions-find-and-replace-string@1
-    #   id: findandreplace
-    #   with:
-    #     source: ${{ github.ref }}
-    #     find: 'refs/heads/feature/'
-    #     replace: ''
+    - name: Run find-and-replace to remove refs/heads/
+      uses: mad9000/actions-find-and-replace-string@1
+      id: findandreplace
+      with:
+        source: ${{ github.ref }}
+        find: 'refs/heads/feature/'
+        replace: ''
 
     # Configure docker to use the gcloud command-line tool as a credential helper
     - name: Artifactory authentication 

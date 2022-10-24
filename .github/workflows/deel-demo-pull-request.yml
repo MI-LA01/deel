@@ -22,7 +22,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2.3.3
       with:
-        ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: 0
         
     - uses: google-github-actions/setup-gcloud@v0.6.0
@@ -107,8 +106,8 @@ jobs:
     - name: Helm chart package
       run: helm package ./chart
 
-  #   - name: Helm publish
-  #     run: HELM_EXPERIMENTAL_OCI=1 helm push ./deel-app-${{ steps.findandreplace.outputs.value }}-${{ env.CHART_VERSION }}.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
+    - name: Helm publish
+      run: HELM_EXPERIMENTAL_OCI=1 helm push ./deel-app-${{ steps.findandreplace.outputs.value }}-${{ env.CHART_VERSION }}.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
 
   # deployer:
   #   runs-on: ubuntu-latest

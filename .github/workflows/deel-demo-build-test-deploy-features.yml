@@ -1,22 +1,23 @@
 name: deel-demo-build-test-publish-feature
 
+# Environment variables available to all jobs and steps in this workflow
+#  GKE_EMAIL: ${{ secrets.GKE_EMAIL }} 
+#  GKE_KEY: ${{ secrets.GKE_KEY }}
+env:
+  CHART_VERSION: "0.1.1"
+  GITHUB_SHA: ${{ github.sha }} 
+  GITHUB_REF: ${{ github.ref }} 
+  IMAGE: deel-app
+  REGISTRY_HOSTNAME: gcr.io/deel-cloud-demo
+
 on:
   push:
     branches: ['feature/**']
-
+  
 jobs:
-  build:
+  builder:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    
-    # Environment variables available to all jobs and steps in this workflow
-    #  GKE_EMAIL: ${{ secrets.GKE_EMAIL }} 
-    #  GKE_KEY: ${{ secrets.GKE_KEY }}
-    env:
-      CHART_VERSION: "0.1.1"
-      GITHUB_SHA: ${{ github.sha }} 
-      GITHUB_REF: ${{ github.ref }} 
-      IMAGE: deel-app
-      REGISTRY_HOSTNAME: gcr.io/deel-cloud-demo
     
     steps:
     - name: Checkout
@@ -109,3 +110,9 @@ jobs:
 
     - name: Helm publish
       run: HELM_EXPERIMENTAL_OCI=1 helm push ./deel-app-${{ steps.findandreplace.outputs.value }}-${{ env.CHART_VERSION }}.tgz oci://europe-west3-docker.pkg.dev/deel-cloud-demo/deel-helm-repo
+
+  # deployer:
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+  #   - name: Checkout

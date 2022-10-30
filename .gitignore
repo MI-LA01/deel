@@ -1,3 +1,8 @@
 node_modules
 .DS_STORE
+.terraform
+terraform.tfstate
+terraform.tfstate.backup
 database.sqlite3
+Alexis
+deel-cloud-demo-41d9821b7384.json
